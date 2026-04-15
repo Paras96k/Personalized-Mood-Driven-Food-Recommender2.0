@@ -1,0 +1,893 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": 49,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "nh1bH0vG_ROS",
+        "outputId": "6293f0ce-bfc2-4c55-f053-d6a5ad45948d"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Requirement already satisfied: kagglehub in /usr/local/lib/python3.12/dist-packages (1.0.0)\n",
+            "Requirement already satisfied: kagglesdk<1.0,>=0.1.14 in /usr/local/lib/python3.12/dist-packages (from kagglehub) (0.1.18)\n",
+            "Requirement already satisfied: packaging in /usr/local/lib/python3.12/dist-packages (from kagglehub) (26.0)\n",
+            "Requirement already satisfied: pyyaml in /usr/local/lib/python3.12/dist-packages (from kagglehub) (6.0.3)\n",
+            "Requirement already satisfied: requests in /usr/local/lib/python3.12/dist-packages (from kagglehub) (2.32.4)\n",
+            "Requirement already satisfied: tqdm in /usr/local/lib/python3.12/dist-packages (from kagglehub) (4.67.3)\n",
+            "Requirement already satisfied: protobuf in /usr/local/lib/python3.12/dist-packages (from kagglesdk<1.0,>=0.1.14->kagglehub) (5.29.6)\n",
+            "Requirement already satisfied: charset_normalizer<4,>=2 in /usr/local/lib/python3.12/dist-packages (from requests->kagglehub) (3.4.7)\n",
+            "Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.12/dist-packages (from requests->kagglehub) (3.11)\n",
+            "Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.12/dist-packages (from requests->kagglehub) (2.5.0)\n",
+            "Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.12/dist-packages (from requests->kagglehub) (2026.2.25)\n"
+          ]
+        }
+      ],
+      "source": [
+        "# STEP 1: Install & Import Libraries\n",
+        "# ============================================\n",
+        "\n",
+        "!pip install kagglehub\n",
+        "\n",
+        "import kagglehub\n",
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "import random\n",
+        "import os\n",
+        "\n",
+        "from sklearn.preprocessing import LabelEncoder\n",
+        "from sklearn.model_selection import train_test_split\n",
+        "from sklearn.ensemble import RandomForestClassifier"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# ============================================\n",
+        "# STEP 2: Upload kaggle.json\n",
+        "# ============================================\n",
+        "\n",
+        "from google.colab import files\n",
+        "files.upload()   # upload kaggle.json"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 91
+        },
+        "id": "WrZQYHE0_fVI",
+        "outputId": "70bf558d-4f5a-4e25-b5a8-54d6b2022aba"
+      },
+      "execution_count": 50,
+      "outputs": [
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ],
+            "text/html": [
+              "\n",
+              "     <input type=\"file\" id=\"files-00309a79-04c9-4521-b16a-b73919192ff7\" name=\"files[]\" multiple disabled\n",
+              "        style=\"border:none\" />\n",
+              "     <output id=\"result-00309a79-04c9-4521-b16a-b73919192ff7\">\n",
+              "      Upload widget is only available when the cell has been executed in the\n",
+              "      current browser session. Please rerun this cell to enable.\n",
+              "      </output>\n",
+              "      <script>// Copyright 2017 Google LLC\n",
+              "//\n",
+              "// Licensed under the Apache License, Version 2.0 (the \"License\");\n",
+              "// you may not use this file except in compliance with the License.\n",
+              "// You may obtain a copy of the License at\n",
+              "//\n",
+              "//      http://www.apache.org/licenses/LICENSE-2.0\n",
+              "//\n",
+              "// Unless required by applicable law or agreed to in writing, software\n",
+              "// distributed under the License is distributed on an \"AS IS\" BASIS,\n",
+              "// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n",
+              "// See the License for the specific language governing permissions and\n",
+              "// limitations under the License.\n",
+              "\n",
+              "/**\n",
+              " * @fileoverview Helpers for google.colab Python module.\n",
+              " */\n",
+              "(function(scope) {\n",
+              "function span(text, styleAttributes = {}) {\n",
+              "  const element = document.createElement('span');\n",
+              "  element.textContent = text;\n",
+              "  for (const key of Object.keys(styleAttributes)) {\n",
+              "    element.style[key] = styleAttributes[key];\n",
+              "  }\n",
+              "  return element;\n",
+              "}\n",
+              "\n",
+              "// Max number of bytes which will be uploaded at a time.\n",
+              "const MAX_PAYLOAD_SIZE = 100 * 1024;\n",
+              "\n",
+              "function _uploadFiles(inputId, outputId) {\n",
+              "  const steps = uploadFilesStep(inputId, outputId);\n",
+              "  const outputElement = document.getElementById(outputId);\n",
+              "  // Cache steps on the outputElement to make it available for the next call\n",
+              "  // to uploadFilesContinue from Python.\n",
+              "  outputElement.steps = steps;\n",
+              "\n",
+              "  return _uploadFilesContinue(outputId);\n",
+              "}\n",
+              "\n",
+              "// This is roughly an async generator (not supported in the browser yet),\n",
+              "// where there are multiple asynchronous steps and the Python side is going\n",
+              "// to poll for completion of each step.\n",
+              "// This uses a Promise to block the python side on completion of each step,\n",
+              "// then passes the result of the previous step as the input to the next step.\n",
+              "function _uploadFilesContinue(outputId) {\n",
+              "  const outputElement = document.getElementById(outputId);\n",
+              "  const steps = outputElement.steps;\n",
+              "\n",
+              "  const next = steps.next(outputElement.lastPromiseValue);\n",
+              "  return Promise.resolve(next.value.promise).then((value) => {\n",
+              "    // Cache the last promise value to make it available to the next\n",
+              "    // step of the generator.\n",
+              "    outputElement.lastPromiseValue = value;\n",
+              "    return next.value.response;\n",
+              "  });\n",
+              "}\n",
+              "\n",
+              "/**\n",
+              " * Generator function which is called between each async step of the upload\n",
+              " * process.\n",
+              " * @param {string} inputId Element ID of the input file picker element.\n",
+              " * @param {string} outputId Element ID of the output display.\n",
+              " * @return {!Iterable<!Object>} Iterable of next steps.\n",
+              " */\n",
+              "function* uploadFilesStep(inputId, outputId) {\n",
+              "  const inputElement = document.getElementById(inputId);\n",
+              "  inputElement.disabled = false;\n",
+              "\n",
+              "  const outputElement = document.getElementById(outputId);\n",
+              "  outputElement.innerHTML = '';\n",
+              "\n",
+              "  const pickedPromise = new Promise((resolve) => {\n",
+              "    inputElement.addEventListener('change', (e) => {\n",
+              "      resolve(e.target.files);\n",
+              "    });\n",
+              "  });\n",
+              "\n",
+              "  const cancel = document.createElement('button');\n",
+              "  inputElement.parentElement.appendChild(cancel);\n",
+              "  cancel.textContent = 'Cancel upload';\n",
+              "  const cancelPromise = new Promise((resolve) => {\n",
+              "    cancel.onclick = () => {\n",
+              "      resolve(null);\n",
+              "    };\n",
+              "  });\n",
+              "\n",
+              "  // Wait for the user to pick the files.\n",
+              "  const files = yield {\n",
+              "    promise: Promise.race([pickedPromise, cancelPromise]),\n",
+              "    response: {\n",
+              "      action: 'starting',\n",
+              "    }\n",
+              "  };\n",
+              "\n",
+              "  cancel.remove();\n",
+              "\n",
+              "  // Disable the input element since further picks are not allowed.\n",
+              "  inputElement.disabled = true;\n",
+              "\n",
+              "  if (!files) {\n",
+              "    return {\n",
+              "      response: {\n",
+              "        action: 'complete',\n",
+              "      }\n",
+              "    };\n",
+              "  }\n",
+              "\n",
+              "  for (const file of files) {\n",
+              "    const li = document.createElement('li');\n",
+              "    li.append(span(file.name, {fontWeight: 'bold'}));\n",
+              "    li.append(span(\n",
+              "        `(${file.type || 'n/a'}) - ${file.size} bytes, ` +\n",
+              "        `last modified: ${\n",
+              "            file.lastModifiedDate ? file.lastModifiedDate.toLocaleDateString() :\n",
+              "                                    'n/a'} - `));\n",
+              "    const percent = span('0% done');\n",
+              "    li.appendChild(percent);\n",
+              "\n",
+              "    outputElement.appendChild(li);\n",
+              "\n",
+              "    const fileDataPromise = new Promise((resolve) => {\n",
+              "      const reader = new FileReader();\n",
+              "      reader.onload = (e) => {\n",
+              "        resolve(e.target.result);\n",
+              "      };\n",
+              "      reader.readAsArrayBuffer(file);\n",
+              "    });\n",
+              "    // Wait for the data to be ready.\n",
+              "    let fileData = yield {\n",
+              "      promise: fileDataPromise,\n",
+              "      response: {\n",
+              "        action: 'continue',\n",
+              "      }\n",
+              "    };\n",
+              "\n",
+              "    // Use a chunked sending to avoid message size limits. See b/62115660.\n",
+              "    let position = 0;\n",
+              "    do {\n",
+              "      const length = Math.min(fileData.byteLength - position, MAX_PAYLOAD_SIZE);\n",
+              "      const chunk = new Uint8Array(fileData, position, length);\n",
+              "      position += length;\n",
+              "\n",
+              "      const base64 = btoa(String.fromCharCode.apply(null, chunk));\n",
+              "      yield {\n",
+              "        response: {\n",
+              "          action: 'append',\n",
+              "          file: file.name,\n",
+              "          data: base64,\n",
+              "        },\n",
+              "      };\n",
+              "\n",
+              "      let percentDone = fileData.byteLength === 0 ?\n",
+              "          100 :\n",
+              "          Math.round((position / fileData.byteLength) * 100);\n",
+              "      percent.textContent = `${percentDone}% done`;\n",
+              "\n",
+              "    } while (position < fileData.byteLength);\n",
+              "  }\n",
+              "\n",
+              "  // All done.\n",
+              "  yield {\n",
+              "    response: {\n",
+              "      action: 'complete',\n",
+              "    }\n",
+              "  };\n",
+              "}\n",
+              "\n",
+              "scope.google = scope.google || {};\n",
+              "scope.google.colab = scope.google.colab || {};\n",
+              "scope.google.colab._files = {\n",
+              "  _uploadFiles,\n",
+              "  _uploadFilesContinue,\n",
+              "};\n",
+              "})(self);\n",
+              "</script> "
+            ]
+          },
+          "metadata": {}
+        },
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Saving kaggle.json to kaggle.json\n"
+          ]
+        },
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "{'kaggle.json': b'{\"username\":\"thoratparasmansing\",\"key\":\"e27fd26addf185ddef8c3feffb1e5ca4\"}'}"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 50
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "217cb597"
+      },
+      "source": [
+        "### How to set up your Kaggle API Key in Colab:\n",
+        "\n",
+        "1.  **Generate Kaggle API Token:**\n",
+        "    *   Go to [Kaggle](https://www.kaggle.com/).\n",
+        "    *   Log in to your account.\n",
+        "    *   Click on your profile picture in the top right corner and select 'My Account'.\n",
+        "    *   Scroll down to the 'API' section and click on 'Create New API Token'. This will download a `kaggle.json` file.\n",
+        "\n",
+        "2.  **Upload `kaggle.json` to Colab Secrets:**\n",
+        "    *   In Google Colab, click on the '🔑' icon (Secrets) in the left-hand sidebar.\n",
+        "    *   Click 'Add new secret'.\n",
+        "    *   For the 'Name' of the secret, type `KAGGLE_USERNAME` and for the 'Value', open your `kaggle.json` file and copy the value associated with the key `username`.\n",
+        "    *   Add another secret: 'Name' as `KAGGLE_KEY` and 'Value' as the value associated with the key `key` from your `kaggle.json` file.\n",
+        "    *   Enable 'Notebook access' for both secrets.\n",
+        "\n",
+        "After setting up these secrets, you can uncomment the line for `drinks_path` in the previous cell and rerun it. `kagglehub` should then be able to use these credentials automatically."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# ============================================\n",
+        "# STEP 3: Setup Kaggle\n",
+        "# ============================================\n",
+        "\n",
+        "import os\n",
+        "\n",
+        "os.makedirs(\"/root/.kaggle\", exist_ok=True)\n",
+        "!mv kaggle.json /root/.kaggle/\n",
+        "!chmod 600 /root/.kaggle/kaggle.json"
+      ],
+      "metadata": {
+        "id": "RionL3jKEBF8"
+      },
+      "execution_count": 51,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# ============================================\n",
+        "# STEP 4: Download Datasets\n",
+        "# ============================================\n",
+        "\n",
+        "# Food dataset\n",
+        "!kaggle datasets download -d irkaal/foodcom-recipes-and-reviews\n",
+        "!unzip -q foodcom-recipes-and-reviews.zip -d food_data\n",
+        "\n",
+        "# Indian food dataset\n",
+        "!kaggle datasets download -d nehaprabhavalkar/indian-food-101\n",
+        "!unzip -q indian-food-101.zip -d indian_data\n",
+        "\n",
+        "# Drinks dataset\n",
+        "!kaggle datasets download -d justinpakzad/drinks-recipes\n",
+        "!unzip -q drinks-recipes.zip -d drinks_data\n",
+        "\n",
+        "print(\"✅ Datasets downloaded\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "cPHlFN6B_tUF",
+        "outputId": "d08069ce-1471-4da3-8e45-32cbe6ce2aeb"
+      },
+      "execution_count": 52,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Dataset URL: https://www.kaggle.com/datasets/irkaal/foodcom-recipes-and-reviews\n",
+            "License(s): CC0-1.0\n",
+            "foodcom-recipes-and-reviews.zip: Skipping, found more recently modified local copy (use --force to force download)\n",
+            "replace food_data/recipes.csv? [y]es, [n]o, [A]ll, [N]one, [r]ename: No\n",
+            "Dataset URL: https://www.kaggle.com/datasets/nehaprabhavalkar/indian-food-101\n",
+            "License(s): copyright-authors\n",
+            "indian-food-101.zip: Skipping, found more recently modified local copy (use --force to force download)\n",
+            "replace indian_data/indian_food.csv? [y]es, [n]o, [A]ll, [N]one, [r]ename: No\n",
+            "403 Client Error: Forbidden for url: https://api.kaggle.com/v1/datasets.DatasetApiService/GetDatasetMetadata\n",
+            "unzip:  cannot find or open drinks-recipes.zip, drinks-recipes.zip.zip or drinks-recipes.zip.ZIP.\n",
+            "✅ Datasets downloaded\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# ============================================\n",
+        "# STEP 4: PREPARE COMBINED DATA\n",
+        "# ============================================\n",
+        "# The 'data' variable in the kernel state contains the combined features and target.\n",
+        "# Initialize df directly from this data to ensure consistency for model training.\n",
+        "df = pd.DataFrame(data)\n",
+        "\n",
+        "# Fill missing values (safe handling)\n",
+        "# Using ffill after creating the DataFrame from 'data' which should be complete.\n",
+        "df = df.ffill()"
+      ],
+      "metadata": {
+        "id": "QewnR94-I10d"
+      },
+      "execution_count": 53,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# ============================================\n",
+        "#STEP 5: ENCODE CATEGORICAL DATA (NO STRUCTURE CHANGE)\n",
+        "# ============================================\n",
+        "\n",
+        "label_encoders = {}\n",
+        "\n",
+        "# Get list of object (string) columns from df\n",
+        "categorical_cols = df.select_dtypes(include='object').columns\n",
+        "\n",
+        "print(f\"Encoding categorical columns: {list(categorical_cols)}\")\n",
+        "\n",
+        "for col in categorical_cols:\n",
+        "    le = LabelEncoder()\n",
+        "    # Fit and transform the column, ensuring it's treated as string\n",
+        "    df[col] = le.fit_transform(df[col].astype(str))\n",
+        "    label_encoders[col] = le\n",
+        "\n",
+        "print(\"✅ Categorical data encoded.\")\n",
+        "print(f\"Label encoders created for: {list(label_encoders.keys())}\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "4LNiU0ufESKJ",
+        "outputId": "25847dc8-ccbb-4d7f-c31c-9fc0b5b6d188"
+      },
+      "execution_count": 54,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Encoding categorical columns: ['Mood', 'Weather', 'Time', 'Food', 'Drink']\n",
+            "✅ Categorical data encoded.\n",
+            "Label encoders created for: ['Mood', 'Weather', 'Time', 'Food', 'Drink']\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# ============================================\n",
+        "# STEP 6: DEFINE FEATURES & TARGET\n",
+        "# ============================================\n",
+        "# ⚠️ IMPORTANT: change 'target' to your actual column if needed\n",
+        "\n",
+        "target_col = 'Food'   # Changed to 'Food' for food prediction\n",
+        "\n",
+        "X = df.drop(target_col, axis=1)\n",
+        "y = df[target_col]\n"
+      ],
+      "metadata": {
+        "id": "0v16Ra3EFZ-R"
+      },
+      "execution_count": 55,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# ============================================\n",
+        "# STEP 7: TRAIN-TEST SPLIT\n",
+        "# ============================================\n",
+        "X_train, X_test, y_train, y_test = train_test_split(\n",
+        "    X, y, test_size=0.2, random_state=42\n",
+        ")"
+      ],
+      "metadata": {
+        "id": "eSzqE-J_FcVp"
+      },
+      "execution_count": 56,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# ============================================\n",
+        "# STEP 8: FEATURE SCALING (IMPORTANT)\n",
+        "# ============================================\n",
+        "from sklearn.preprocessing import StandardScaler\n",
+        "import pandas as pd\n",
+        "\n",
+        "# The error 'ValueError: could not convert string to float: 'Excited''\n",
+        "# indicates that X_train contains non-numeric (string) data when StandardScaler expects numbers.\n",
+        "# This often happens when categorical features are not fully encoded to numerical values.\n",
+        "\n",
+        "# Based on the kernel state of X_train, columns 'Mood', 'Weather', 'Time', and 'Food'\n",
+        "# are still in string format. We need to convert them using the label_encoders\n",
+        "# that were generated in a previous step.\n",
+        "\n",
+        "# Identify categorical columns that are still objects in X_train\n",
+        "categorical_cols_to_encode = [col for col in X_train.columns if X_train[col].dtype == 'object']\n",
+        "\n",
+        "for col in categorical_cols_to_encode:\n",
+        "    if col in label_encoders:\n",
+        "        # Apply the pre-fitted LabelEncoder to transform string values to numerical\n",
+        "        # .astype(str) is used to ensure the input to transform is string, preventing errors\n",
+        "        # if a column accidentally became mixed type.\n",
+        "        X_train[col] = label_encoders[col].transform(X_train[col].astype(str))\n",
+        "        X_test[col] = label_encoders[col].transform(X_test[col].astype(str))\n",
+        "    else:\n",
+        "        # If for some reason a LabelEncoder is not found for an object column,\n",
+        "        # try a robust conversion to numeric, filling NaNs (e.g., if it was meant\n",
+        "        # to be numeric but became object due to mixed types).\n",
+        "        print(f\"Warning: No LabelEncoder found for column '{col}'. Attempting direct numeric conversion.\")\n",
+        "        X_train[col] = pd.to_numeric(X_train[col], errors='coerce').fillna(0)\n",
+        "        X_test[col] = pd.to_numeric(X_test[col], errors='coerce').fillna(0)\n",
+        "\n",
+        "# Now that all features in X_train and X_test should be numeric, proceed with scaling.\n",
+        "scaler = StandardScaler()\n",
+        "X_train = scaler.fit_transform(X_train)\n",
+        "X_test = scaler.transform(X_test)"
+      ],
+      "metadata": {
+        "id": "YWRjJnXyFirB"
+      },
+      "execution_count": 57,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# ============================================\n",
+        "# STEP 9: INITIALIZE MODELS\n",
+        "# ============================================\n",
+        "from sklearn.neighbors import KNeighborsClassifier\n",
+        "from sklearn.tree import DecisionTreeClassifier\n",
+        "from sklearn.svm import SVC\n",
+        "\n",
+        "models = {\n",
+        "    \"KNN\": KNeighborsClassifier(n_neighbors=5),\n",
+        "    \"Decision Tree\": DecisionTreeClassifier(),\n",
+        "    \"Random Forest\": RandomForestClassifier(n_estimators=100),\n",
+        "    \"SVM\": SVC(probability=True)\n",
+        "}"
+      ],
+      "metadata": {
+        "id": "JQQNb7wxFk0G"
+      },
+      "execution_count": 58,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# ============================================\n",
+        "# STEP 10: TRAIN MODELS\n",
+        "# ============================================\n",
+        "for name, model in models.items():\n",
+        "    model.fit(X_train, y_train)\n",
+        "\n"
+      ],
+      "metadata": {
+        "id": "nCI0FdOFFrAP"
+      },
+      "execution_count": 59,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# ============================================\n",
+        "# STEP 11: MODEL ACCURACY\n",
+        "# ============================================\n",
+        "from sklearn.metrics import accuracy_score\n",
+        "\n",
+        "print(\"\\n📊 Model Accuracy:\\n\")\n",
+        "\n",
+        "for name, model in models.items():\n",
+        "    preds = model.predict(X_test)\n",
+        "    acc = accuracy_score(y_test, preds)\n",
+        "    print(f\"{name}: {acc:.2f}\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "BgsvktDKK9q8",
+        "outputId": "121af8be-cf52-4a76-a128-0e460ab23fb1"
+      },
+      "execution_count": 60,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\n",
+            "📊 Model Accuracy:\n",
+            "\n",
+            "KNN: 0.00\n",
+            "Decision Tree: 0.00\n",
+            "Random Forest: 0.00\n",
+            "SVM: 0.00\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# ============================================\n",
+        "# STEP 12: PREDICTION FUNCTION\n",
+        "# ============================================\n",
+        "def predict_and_suggest(input_data):\n",
+        "    input_data = np.array(input_data).reshape(1, -1)\n",
+        "    input_data = scaler.transform(input_data)\n",
+        "\n",
+        "    results = {}\n",
+        "    vote_score = {}\n",
+        "\n",
+        "    for name, model in models.items():\n",
+        "        probs = model.predict_proba(input_data)[0]\n",
+        "        pred = np.argmax(probs)\n",
+        "        confidence = np.max(probs)\n",
+        "\n",
+        "        results[name] = {\n",
+        "            \"prediction\": pred,\n",
+        "            \"confidence\": confidence\n",
+        "        }\n",
+        "\n",
+        "        # weighted voting\n",
+        "        if pred not in vote_score:\n",
+        "            vote_score[pred] = 0\n",
+        "        vote_score[pred] += confidence\n",
+        "\n",
+        "    final_prediction = max(vote_score, key=vote_score.get)\n",
+        "\n",
+        "    return results, final_prediction"
+      ],
+      "metadata": {
+        "id": "kJvGkcjaLLMO"
+      },
+      "execution_count": 61,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "6767820b"
+      },
+      "source": [
+        "# ============================================\n",
+        "# STEP 13.1: INTERACTIVE PREDICTION FUNCTION\n",
+        "# ============================================\n",
+        "\n",
+        "def get_interactive_food_suggestion():\n",
+        "    print(\"\\n--- Get Your Personalized Food Suggestion ---\")\n",
+        "\n",
+        "    # Get user input for Mood\n",
+        "    print(\"\\nAvailable Moods:\", ', '.join([le_mood.replace(\"'\", \"\") for le_mood in label_encoders['Mood'].classes_]))\n",
+        "    mood_input = input(\"Enter your current mood: \")\n",
+        "    while mood_input not in label_encoders['Mood'].classes_:\n",
+        "        print(\"Invalid mood. Please choose from the available moods.\")\n",
+        "        mood_input = input(\"Enter your current mood: \")\n",
+        "\n",
+        "    # Get user input for Weather\n",
+        "    print(\"\\nAvailable Weathers:\", ', '.join([le_weather.replace(\"'\", \"\") for le_weather in label_encoders['Weather'].classes_]))\n",
+        "    weather_input = input(\"Enter the current weather: \")\n",
+        "    while weather_input not in label_encoders['Weather'].classes_:\n",
+        "        print(\"Invalid weather. Please choose from the available weathers.\")\n",
+        "        weather_input = input(\"Enter the current weather: \")\n",
+        "\n",
+        "    # Get user input for Time\n",
+        "    print(\"\\nAvailable Times:\", ', '.join([le_time.replace(\"'\", \"\") for le_time in label_encoders['Time'].classes_]))\n",
+        "    time_input = input(\"Enter the time of day (Morning, Afternoon, Evening, Night): \")\n",
+        "    while time_input not in label_encoders['Time'].classes_:\n",
+        "        print(\"Invalid time. Please choose from the available times.\")\n",
+        "        time_input = input(\"Enter the time of day: \")\n",
+        "\n",
+        "    # Suggest a drink based on mood, weather, and time\n",
+        "    def suggest_drink(mood, weather, time):\n",
+        "        drink_suggestions = []\n",
+        "\n",
+        "        # Mood-based suggestions\n",
+        "        if mood in ['Happy', 'Excited']:\n",
+        "            drink_suggestions.extend(['Juice', 'Smoothie', 'Lemonade'])\n",
+        "        elif mood in ['Relaxed', 'Bored']:\n",
+        "            drink_suggestions.extend(['Tea', 'Coffee', 'Coconut Water'])\n",
+        "        elif mood in ['Sad', 'Stressed']:\n",
+        "            drink_suggestions.extend(['Hot Chocolate', 'Milkshake'])\n",
+        "        elif mood == 'Angry':\n",
+        "            drink_suggestions.extend(['Cold Coffee', 'Lemonade'])\n",
+        "\n",
+        "        # Weather-based suggestions\n",
+        "        if weather == 'Hot':\n",
+        "            drink_suggestions.extend(['Cold Coffee', 'Juice', 'Lemonade', 'Coconut Water', 'Smoothie', 'Lassi'])\n",
+        "        elif weather == 'Cold':\n",
+        "            drink_suggestions.extend(['Hot Chocolate', 'Masala Chai', 'Coffee', 'Tea'])\n",
+        "        elif weather == 'Rainy':\n",
+        "            drink_suggestions.extend(['Masala Chai', 'Tea', 'Coffee', 'Hot Chocolate'])\n",
+        "        elif weather == 'Windy':\n",
+        "            drink_suggestions.extend(['Tea', 'Coffee'])\n",
+        "        elif weather == 'Humid':\n",
+        "            drink_suggestions.extend(['Juice', 'Lemonade', 'Coconut Water'])\n",
+        "\n",
+        "        # Time-based suggestions\n",
+        "        if time == 'Morning':\n",
+        "            drink_suggestions.extend(['Coffee', 'Tea', 'Juice', 'Masala Chai', 'Smoothie'])\n",
+        "        elif time == 'Afternoon':\n",
+        "            drink_suggestions.extend(['Coffee', 'Juice', 'Smoothie', 'Lassi', 'Cold Coffee'])\n",
+        "        elif time == 'Evening':\n",
+        "            drink_suggestions.extend(['Tea', 'Milkshake', 'Hot Chocolate'])\n",
+        "        elif time == 'Night':\n",
+        "            drink_suggestions.extend(['Hot Chocolate', 'Tea', 'Milkshake'])\n",
+        "\n",
+        "        # Filter suggestions to only include drinks available in label_encoders['Drink'].classes_\n",
+        "        available_drinks = list(label_encoders['Drink'].classes_)\n",
+        "        valid_suggestions = [d for d in drink_suggestions if d in available_drinks]\n",
+        "\n",
+        "        if valid_suggestions:\n",
+        "            # Pick a random drink from the valid suggestions\n",
+        "            return random.choice(valid_suggestions)\n",
+        "        else:\n",
+        "            # Fallback: if no specific suggestion, pick a random available drink\n",
+        "            return random.choice(available_drinks)\n",
+        "\n",
+        "    drink_suggestion = suggest_drink(mood_input, weather_input, time_input)\n",
+        "    print(f\"\\nI suggest you try a: {drink_suggestion}\")\n",
+        "    drink_input = drink_suggestion # Use the suggested drink as input\n",
+        "\n",
+        "    # Encode user inputs using the fitted LabelEncoders\n",
+        "    encoded_mood = label_encoders['Mood'].transform([mood_input])[0]\n",
+        "    encoded_weather = label_encoders['Weather'].transform([weather_input])[0]\n",
+        "    encoded_time = label_encoders['Time'].transform([time_input])[0]\n",
+        "    encoded_drink = label_encoders['Drink'].transform([drink_input])[0]\n",
+        "\n",
+        "    # Assemble the input data in the correct order as per X columns: ['Mood', 'Weather', 'Time', 'Drink']\n",
+        "    user_input_encoded = np.array([\n",
+        "        encoded_mood,\n",
+        "        encoded_weather,\n",
+        "        encoded_time,\n",
+        "        encoded_drink\n",
+        "    ]).reshape(1, -1)\n",
+        "\n",
+        "    # Get prediction\n",
+        "    results, final_pred_encoded = predict_and_suggest(user_input_encoded)\n",
+        "\n",
+        "    # Decode the final prediction\n",
+        "    final_food_suggestion = label_encoders['Food'].inverse_transform([final_pred_encoded])[0]\n",
+        "\n",
+        "    print(f\"\\n\\n✅ Your personalized food suggestion: {final_food_suggestion}\")\n",
+        "\n",
+        "    print(\"\\n🔍 Individual Model Results:\")\n",
+        "    for model_name, res in results.items():\n",
+        "        decoded_pred = label_encoders['Food'].inverse_transform([res['prediction']])[0]\n",
+        "        print(f\"  {model_name}: Pred = {decoded_pred}, Confidence = {res['confidence']:.2f}\")\n"
+      ],
+      "execution_count": 62,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "bc1d99b7"
+      },
+      "source": [
+        "### Try it out! Run the cell below to get an interactive food suggestion."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "66ea87bc",
+        "outputId": "38cc826b-0585-462a-ab04-f61f91010688"
+      },
+      "source": [
+        "# Call the interactive function to get a food suggestion\n",
+        "get_interactive_food_suggestion()"
+      ],
+      "execution_count": 63,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\n",
+            "--- Get Your Personalized Food Suggestion ---\n",
+            "\n",
+            "Available Moods: Angry, Bored, Excited, Happy, Relaxed, Sad, Stressed\n",
+            "Enter your current mood: Relaxed\n",
+            "\n",
+            "Available Weathers: Cold, Hot, Humid, Rainy, Windy\n",
+            "Enter the current weather: Hot\n",
+            "\n",
+            "Available Times: Afternoon, Evening, Morning, Night\n",
+            "Enter the time of day (Morning, Afternoon, Evening, Night): Night\n",
+            "\n",
+            "I suggest you try a: Cold Coffee\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "/usr/local/lib/python3.12/dist-packages/sklearn/utils/validation.py:2739: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names\n",
+            "  warnings.warn(\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\n",
+            "\n",
+            "✅ Your personalized food suggestion: Apple Pie Martini\n",
+            "\n",
+            "🔍 Individual Model Results:\n",
+            "  KNN: Pred = Apple Pie Martini, Confidence = 0.20\n",
+            "  Decision Tree: Pred = Apple Pie Martini, Confidence = 0.33\n",
+            "  Random Forest: Pred = Apple Pie Martini, Confidence = 0.33\n",
+            "  SVM: Pred = Japanese Mum's Chicken, Confidence = 0.00\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# ============================================\n",
+        "# STEP 13: TEST WITH SAMPLE INPUT\n",
+        "# ============================================\n",
+        "# Get the raw sample input as a pandas Series\n",
+        "raw_sample_input_series = X.iloc[0].copy()\n",
+        "\n",
+        "# The sample input is already numerically encoded because X was derived from the df\n",
+        "# that was fully encoded in STEP 5. No further encoding is needed here.\n",
+        "# Convert the numerically encoded Series to a NumPy array and reshape for the model\n",
+        "sample_input_encoded = raw_sample_input_series.values.reshape(1, -1)\n",
+        "\n",
+        "results, final_pred = predict_and_suggest(sample_input_encoded)\n",
+        "\n",
+        "# Decode the final prediction back to the original food name\n",
+        "predicted_food_name = label_encoders[target_col].inverse_transform([final_pred])[0]\n",
+        "\n",
+        "print(\"\\n🔍 Individual Model Results:\\n\")\n",
+        "for model in results:\n",
+        "    # Decode individual model predictions for clarity\n",
+        "    decoded_pred = label_encoders[target_col].inverse_transform([results[model]['prediction']])[0]\n",
+        "    print(f\"{model}: Pred = {decoded_pred}, Confidence = {results[model]['confidence']:.2f}\")\n",
+        "\n",
+        "print(f\"\\n✅ FINAL SUGGESTION: {predicted_food_name}\")\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "pAxTnm2ZLTES",
+        "outputId": "f7ce340c-ee63-46b2-8ac0-c0bbed733bbe"
+      },
+      "execution_count": 64,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "/usr/local/lib/python3.12/dist-packages/sklearn/utils/validation.py:2739: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names\n",
+            "  warnings.warn(\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\n",
+            "🔍 Individual Model Results:\n",
+            "\n",
+            "KNN: Pred = Chocolate Chunk Cookies (Low Fat/Low Calorie), Confidence = 0.20\n",
+            "Decision Tree: Pred = Chocolate Chunk Cookies (Low Fat/Low Calorie), Confidence = 0.20\n",
+            "Random Forest: Pred = Pork in Hot Peanut Sauce, Confidence = 0.21\n",
+            "SVM: Pred = Japanese Mum's Chicken, Confidence = 0.00\n",
+            "\n",
+            "✅ FINAL SUGGESTION: Chocolate Chunk Cookies (Low Fat/Low Calorie)\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
